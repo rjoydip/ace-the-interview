@@ -1,0 +1,29 @@
+name: Check PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  check_title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Get PR title
+        id: get_title
+        run: echo "PR_TITLE=$(echo '${{ github.event.pull_request.title }}')" >> $GITHUB_OUTPUT
+      - name: Check PR title format
+        run: |
+          PR_TITLE="${{ steps.get_title.outputs.PR_TITLE }}"
+          echo "Checking PR title: $PR_TITLE"
+          # Define your desired title format using regex
+          # Example: Must start with a type (feat, fix, chore, etc.) followed by a colon
+          regex='^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?: .+$'
+          if [[ "$PR_TITLE" =~ $regex ]]; then
+            echo "PR title is valid."
+          else
+            echo "::error::PR title does not match the required format."
+            echo "Please use a title like 'type(scope): description' (e.g., 'feat: Add new user authentication')."
+            exit 1
+          fi
